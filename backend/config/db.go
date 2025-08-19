@@ -1,3 +1,5 @@
+// ConnectMongo initializes and validates a MongoDB connection using env vars.
+
 package config
 
 import (
@@ -10,10 +12,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var Client *mongo.Client // optional: keep a reference if you want to disconnect later
+// Client is a shared reference to the Mongo client.
+// Useful for disconnecting or reusing across packages.
+var Client *mongo.Client
 
-// ConnectMongo connects using env vars and returns (client, db).
-// Requires backend/.env with MONGO_URI and DB_NAME set.
+// ConnectMongo establishes a MongoDB connection using env variables.
+// Exits early if MONGO_URI or DB_NAME are not set.
 func ConnectMongo() (*mongo.Client, *mongo.Database) {
 	uri := os.Getenv("MONGO_URI")
 	dbName := os.Getenv("DB_NAME")
@@ -21,6 +25,7 @@ func ConnectMongo() (*mongo.Client, *mongo.Database) {
 		log.Fatal("MONGO_URI or DB_NAME not set")
 	}
 
+	// external calls to avoid hanging.
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
@@ -28,6 +33,8 @@ func ConnectMongo() (*mongo.Client, *mongo.Database) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	//health check to ensure connection is actually alive.
 	if err := client.Ping(ctx, nil); err != nil {
 		log.Fatalf("Mongo ping failed: %v", err)
 	}
@@ -38,7 +45,8 @@ func ConnectMongo() (*mongo.Client, *mongo.Database) {
 	return client, db
 }
 
-// Optional shim so older code calling config.ConnectDB still compiles.
+// ConnectDB is kept as a backward-compatibility shim.
+// Can be removed once all callers migrate to ConnectMongo().
 func ConnectDB() (*mongo.Client, *mongo.Database) {
 	return ConnectMongo()
 }
