@@ -2,38 +2,43 @@ package config
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"time"
 
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var DB *mongo.Client
+var Client *mongo.Client // optional: keep a reference if you want to disconnect later
 
-func ConnectDB() *mongo.Client {
-	_ = godotenv.Load()
-
+// ConnectMongo connects using env vars and returns (client, db).
+// Requires backend/.env with MONGO_URI and DB_NAME set.
+func ConnectMongo() (*mongo.Client, *mongo.Database) {
 	uri := os.Getenv("MONGO_URI")
-	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
+	dbName := os.Getenv("DB_NAME")
+	if uri == "" || dbName == "" {
+		log.Fatal("MONGO_URI or DB_NAME not set")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	if err := client.Connect(ctx); err != nil {
-		log.Fatal(err)
-	}
 	if err := client.Ping(ctx, nil); err != nil {
-		log.Fatal("Mongo ping failed:", err)
+		log.Fatalf("Mongo ping failed: %v", err)
 	}
 
-	fmt.Println("✅ Connected to MongoDB")
-	DB = client
-	return client
+	Client = client
+	db := client.Database(dbName)
+	log.Println("Connected to MongoDB!!!!!!")
+	return client, db
+}
+
+// Optional shim so older code calling config.ConnectDB still compiles.
+func ConnectDB() (*mongo.Client, *mongo.Database) {
+	return ConnectMongo()
 }
