@@ -1,3 +1,5 @@
+// In-memory pub/sub to notify subscribers of real-time form response updates.
+
 package handlers
 
 import (
@@ -6,7 +8,7 @@ import (
 
 var (
 	rtMu sync.Mutex
-	// key = formId hex; value = set of subscriber channels
+	// key = formId hex; value
 	rtSubs = map[string]map[chan struct{}]struct{}{}
 )
 

@@ -1,3 +1,5 @@
+// Handler for updating form details, fields, and status with validation.
+
 package handlers
 
 import (
@@ -25,7 +27,7 @@ func UpdateForm(c *fiber.Ctx) error {
 	var body struct {
 		Title  *string         `json:"title"`
 		Fields *[]models.Field `json:"fields"`
-		Status *string         `json:"status"` // draft|published (optional)
+		Status *string         `json:"status"`
 	}
 	if err := c.BodyParser(&body); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "invalid body"})
@@ -45,7 +47,7 @@ func UpdateForm(c *fiber.Ctx) error {
 			return c.Status(400).JSON(fiber.Map{"error": "fields cannot be empty"})
 		}
 
-		// ensure unique field IDs
+		//field IDs
 		seen := make(map[string]struct{}, len(*body.Fields))
 		for _, f := range *body.Fields {
 			if _, dup := seen[f.ID]; dup {
@@ -54,7 +56,7 @@ func UpdateForm(c *fiber.Ctx) error {
 			seen[f.ID] = struct{}{}
 		}
 
-		// validation (same rules as in CreateForm)
+		// validation
 		for _, f := range *body.Fields {
 			if f.ID == "" || f.Type == "" || f.Label == "" {
 				return c.Status(400).JSON(fiber.Map{"error": "each field requires id, type, label"})
@@ -75,7 +77,7 @@ func UpdateForm(c *fiber.Ctx) error {
 		set["status"] = *body.Status
 	}
 
-	if len(set) == 1 { // only updatedAt present
+	if len(set) == 1 {
 		return c.Status(400).JSON(fiber.Map{"error": "no updatable fields provided"})
 	}
 
