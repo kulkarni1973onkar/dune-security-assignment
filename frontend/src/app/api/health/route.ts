@@ -5,7 +5,7 @@ export async function GET() {
   try {
     const res = await fetch(url, { cache: "no-store", next: { revalidate: 0 } });
     const text = await res.text(); // <- backend returns plain text
-    return new Response(text, {
+    return new Response(text, { 
       status: res.status,
       headers: { "Content-Type": "text/plain; charset=utf-8" },
     });
