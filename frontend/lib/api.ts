@@ -1,10 +1,15 @@
 import { AnalyticsSnapshot, FormResponse, FormSchema } from './types';
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE as string;
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY as string | undefined;
+
 if (!BASE) {
-  
-  
-  console.warn('NEXT_PUBLIC_API_BASE is not set. Add it to .env.local');
+  console.warn('NEXT_PUBLIC_API_BASE is not set. Add it in Vercel env (and .env.local for dev).');
+}
+
+
+function adminHeaders(): Record<string, string> {
+  return API_KEY ? { 'x-api-key': API_KEY } : {};
 }
 
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
@@ -13,42 +18,63 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
     credentials: 'omit',
     ...init,
   });
+
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(`HTTP ${res.status} ${res.statusText} at ${path} ${text ? `- ${text}` : ''}`);
+    throw new Error(`HTTP ${res.status} ${res.statusText} at ${path}${text ? ` - ${text}` : ''}`);
   }
-  
+
   const ct = res.headers.get('content-type') || '';
-  if (!ct.includes('application/json')) return undefined as unknown as T;
+  if (!ct.includes('application/json')) {
+    
+    return undefined as unknown as T;
+  }
   return (await res.json()) as T;
 }
 
 export const api = {
-  /* ------------------------- Forms CRUD ------------------------- */
+  /* ------------------------- Forms (admin) ------------------------- */
   createForm: (body: FormSchema) =>
     http<FormSchema>('/forms', {
       method: 'POST',
+      headers: { ...adminHeaders() },
       body: JSON.stringify(body),
     }),
 
-  getForms: () => http<FormSchema[]>('/forms'),
+  getForms: () =>
+    http<FormSchema[]>('/forms', {
+      headers: { ...adminHeaders() },
+    }),
 
-  getForm: (id: string) => http<FormSchema>(`/forms/${id}`),
+  getForm: (id: string) =>
+    http<FormSchema>(`/forms/${id}`, {
+      headers: { ...adminHeaders() },
+    }),
 
   updateForm: (id: string, body: Partial<FormSchema>) =>
     http<FormSchema>(`/forms/${id}`, {
-      method: 'PUT',
+      method: 'PATCH',
+      headers: { ...adminHeaders() },
       body: JSON.stringify(body),
     }),
 
-  publishForm: (id: string) =>
-    http<FormSchema>(`/forms/${id}/status`, {
+  deleteForm: (id: string) =>
+    http<{ ok: true }>(`/forms/${id}`, {
+      method: 'DELETE',
+      headers: { ...adminHeaders() },
+    }),
+
+  
+  publishForm: (id: string, slug?: string) =>
+    http<FormSchema>(`/forms/${id}`, {
       method: 'PATCH',
-      body: JSON.stringify({ status: 'published' }),
+      headers: { ...adminHeaders() },
+      body: JSON.stringify(slug ? { status: 'published', slug } : { status: 'published' }),
     }),
 
   /* -------------------- Public form & responses -------------------- */
-  getPublicForm: (slug: string) => http<FormSchema>(`/forms/public/${slug}`),
+  
+  getPublicForm: (slug: string) => http<FormSchema>(`/public/forms/${slug}`),
 
   submitResponse: (id: string, body: FormResponse) =>
     http<{ ok: true }>(`/forms/${id}/responses`, {
@@ -60,4 +86,5 @@ export const api = {
   getAnalytics: (id: string) => http<AnalyticsSnapshot>(`/forms/${id}/analytics`),
 
 
+  streamAnalyticsUrl: (id: string) => `${BASE}/forms/${id}/analytics/stream`,
 };
