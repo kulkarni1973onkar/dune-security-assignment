@@ -1,4 +1,4 @@
-module backend
+module github.com/kulkarni1973onkar/dune-security-assignment/backend
 
 go 1.25.0
 

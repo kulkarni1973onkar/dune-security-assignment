@@ -15,7 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	"backend/models"
+	"github.com/kulkarni1973onkar/dune-security-assignment/backend/models"
 )
 
 // POST /forms/:id/responses

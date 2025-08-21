@@ -12,9 +12,9 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
 
-	"backend/config"
-	"backend/handlers"
-	"backend/middleware"
+	"github.com/kulkarni1973onkar/dune-security-assignment/backend/config"
+	"github.com/kulkarni1973onkar/dune-security-assignment/backend/handlers"
+	"github.com/kulkarni1973onkar/dune-security-assignment/backend/middleware"
 )
 
 func main() {

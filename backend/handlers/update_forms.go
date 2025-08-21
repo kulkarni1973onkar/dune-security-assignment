@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"backend/models"
+	"github.com/kulkarni1973onkar/dune-security-assignment/backend/models"
 )
 
 // PATCH /forms/:id
