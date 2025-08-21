@@ -1,127 +1,113 @@
-﻿# Dune Security Assignment
-# Backend
-# Custom Form Builder with Live Analytics 
+# Form Builder Application  
 
-## 1. Project Description
-This is a backend service built with **Go (Fiber)** and **MongoDB** that powers a simple form builder application.  
-It supports creating forms, managing fields, submitting responses, and aggregating analytics (ratings, options, counts).  
-A **real-time analytics stream** is also available via **Server-Sent Events (SSE)** for live dashboards.
+A dynamic, customizable **form builder application** built with **Next.js (frontend)** and **Go Fiber + MongoDB (backend)**. The project demonstrates full-stack skills by enabling users to:  
+
+- Create forms with text, multiple choice, checkboxes, and rating fields.  
+- Save drafts and publish forms with a unique slug.  
+- Share forms publicly to collect responses.  
+- View **real-time analytics** of responses through a live dashboard.  
 
 ---
 
-## 2. Setup Instructions
+## Live Demo  
 
-### Prerequisites
-- Go 1.21+ installed
-- MongoDB Atlas cluster (or local MongoDB instance)
-- Git
+- **Frontend (Next.js on Vercel):**  
+  [https://dune-security-assignment.vercel.app/forms/new](https://dune-security-assignment.vercel.app/forms/new)  
 
-### Steps
+- **Backend Health (Go Fiber on Render):**  
+  [https://dune-security-assignment-h89s.onrender.com/healthz](https://dune-security-assignment-h89s.onrender.com/healthz)  
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/<your-username>/dune-security-assignment.git
-   cd dune-security-assignment/backend
+> ⚠️ Note: The backend API is running, but integration between frontend (Vercel) and backend (Render) is not fully stable due to deployment configuration and time constraints. Forms UI works, but some API calls may return intermittent errors.  
 
-2. Copy the example environment file and update with your credentials:
+---
 
-    cp .env.example .env
+## 🛠️ Getting Started  
 
-    Fill in:
-    MONGO_URI=mongodb+srv://<username>:<password>@<cluster-url>/<dbname>?retryWrites=true&w=majority
-    DB_NAME=formbuilder
-    PORT=8080
+### 1. Clone the repo  
 
-3. Run the server:
+```bash
+git clone https://github.com/<your-username>/dune-security-assignment.git
+cd dune-security-assignment
 
-    go run main.go
+2. Install dependencies
+npm install
+# or
+yarn install
 
-4. The API will be available at:
-    http://localhost:8080
+3. Run the frontend (Next.js)
+npm run dev
 
-3. Assumptions and Challenges
+4. Run the backend (Go Fiber)
+cd backend
+go run main.go
+Backend runs at http://localhost:8080.
 
-    3.1 Assumptions
+⚙️Environment Variables
+Create a .env.local file in the frontend root with:
+NEXT_PUBLIC_API_BASE=http://localhost:8080
+NEXT_PUBLIC_API_KEY=demo-key
 
-        - Only published forms can accept responses.
-
-        - Each form has a unique slug when published, used for public access.
-
-        - API is protected with an optional X-API-Key header for admin routes.
-
-        - Real-time analytics are delivered via SSE for simplicity instead of WebSockets.
-
-    3.2 Challenges
-
-      Schema & Validation: Implementing strict field-level validation (required fields, rating ranges, regex patterns) while keeping the form builder flexible.
-
-Database Design: Designing MongoDB collections and indexes to support both fast form retrieval and analytics queries without performance bottlenecks.
-
-Real-Time Analytics: Efficiently handling real-time analytics updates using in-memory pub/sub to notify live subscribers without overloading the server.
-
-API Contracts: Aligning backend API contracts with frontend expectations (payload shape, publish/update workflows) to avoid invalid body errors.
-
-CORS & Origins: Configuring CORS and ALLOWED_ORIGINS correctly so that the frontend (Vercel) and backend (Render) could communicate securely.
-
-Environment Variables: Managing environment variables (NEXT_PUBLIC_API_BASE, API keys, origins) consistently across local, Render, and Vercel environments.
-
-Deployment Issues: Debugging mismatches between local and cloud environments — locally the system worked, but in production deployment, frontend ↔ backend integration had intermittent failures.
-
-Time Constraints: Due to limited time, not all integration issues could be resolved fully, which led to occasional API errors on the deployed version even though local builds were stable.
-
-4. Testing Real-Time Analytics
-
-    1. Start the server as described above.
-
-    2. Open a terminal and run:
-
-    curl -N http://localhost:8080/forms/<formId>/analytics/stream
-
-   - This will keep a streaming connection open and print analytics events.
-
-   3. In another terminal, submit a response:
-
-     curl -X POST http://localhost:8080/forms/<formId>/responses \
-    -H "Content-Type: application/json" \
-    -d '{"field1":"Option A","field2":5}'
-
-   4. Watch the first terminal update in real time with new analytics data.
-
-5. API Endpoints (Summary)
-
-1. Public
-
-    - GET /public/forms/:slug → Fetch a published form by slug.
-
-    - POST /forms/:id/responses → Submit a response to a published form.
-
-    - GET /forms/:id/analytics → Get analytics (ratings, options, totals).
-
-    - GET /forms/:id/analytics/stream → Stream real-time analytics via SSE.
-
-    - GET /forms/:id/responses → List responses with pagination.
+For backend (.env):
+MONGO_URI=<your-mongodb-uri>
+ALLOWED_ORIGINS=http://localhost:3000,https://dune-security-assignment.vercel.app
+PORT=8080
 
 
-2. Admin (requires X-API-Key header)
+📊 Features
 
-    - POST /forms → Create a new form (draft).
+Form Builder UI – Add text, multiple choice, checkbox, rating fields.
 
-    - GET /forms → List forms with pagination and status filter.
+Draft & Publish – Save drafts locally and publish with custom slug.
 
-    - GET /forms/:id → Fetch a form by ID.
+Public Form Sharing – Access via unique /public/:slug link.
 
-    - PATCH /forms/:id → Update form details, fields, or status.
+Responses – Users can submit responses stored in MongoDB.
 
-    - DELETE /forms/:id → Delete a form and cascade delete its responses. 
-
-6. Tech Stack
-
-    - Go (Fiber v2) – Web framework
-
-    - MongoDB – Storage and aggregation
-
-    - Server-Sent Events (SSE) – Real-time analytics streaming
-    
+Analytics Dashboard – Real-time analytics with in-memory pub/sub.
 
 
+3.2 Challenges
 
+Schema & Validation: strict field-level validation while keeping flexibility.
+
+Database Design: creating indexes for fast form retrieval + analytics.
+
+Real-Time Analytics: efficient pub/sub handling for live dashboards.
+
+API Contracts: syncing backend payloads with frontend expectations.
+
+CORS & Origins: cross-platform communication between Vercel & Render.
+
+Environment Variables: consistent handling across dev, Render, and Vercel.
+
+Deployment Issues: integration stable locally but intermittent in production.
+
+Time Constraints: some deployment issues remain unresolved despite best effort.
+
+
+📖 Documentation
+Setup locally: Follow steps above to run frontend + backend.
+
+Assumptions:
+
+Responses are anonymous.
+
+Basic pub/sub is in-memory (not Redis).
+
+Minimal error handling added due to time.
+
+How to test analytics:
+
+Open the form’s public URL in one tab.
+
+Submit responses.
+
+Watch analytics update live in another tab.
+
+
+📚 Learnings
+Gained experience in handling cross-platform deployments (Render + Vercel).
+
+Importance of consistent API contracts between frontend & backend.
+
+Trade-offs between time constraints and complete production stability.
