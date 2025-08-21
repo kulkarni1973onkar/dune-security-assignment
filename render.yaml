@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: dune-security-api
+    env: go
+    rootDir: backend
+    buildCommand: go build -o server .
+    startCommand: ./server
+    autoDeploy: true
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: http://localhost:3000
